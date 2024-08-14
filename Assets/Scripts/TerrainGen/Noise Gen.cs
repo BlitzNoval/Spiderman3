@@ -13,7 +13,7 @@ public static class NoiseGen
    /// <param name="lacunarity"> Controls increase in frequency of layers </param>
    /// <param name="persistence"> Controls decrease in amplitude of layers </param>
    /// <returns> A layered noise map of values between 0 and 1 </returns>
-   public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float lacunarity, float persistence, float noiseScale)
+   public static float[,] GenerateNoiseMapPerlin(int mapWidth, int mapHeight, float lacunarity, float persistence, float noiseScale)
    {
       noiseScale = Mathf.Clamp(noiseScale, 0.0001f, Single.MaxValue);
       float[,] output = new float[mapWidth,mapHeight];

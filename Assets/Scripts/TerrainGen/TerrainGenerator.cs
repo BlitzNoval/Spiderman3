@@ -12,7 +12,7 @@ public class TerrainGenerator : MonoBehaviour
 
     public void GenerateMap()
     {
-        float[,] noiseMap = NoiseGen.GenerateNoiseMap(mapX, mapY, lacunarity, persistence, mapScale);
+        float[,] noiseMap = NoiseGen.GenerateNoiseMapPerlin(mapX, mapY, lacunarity, persistence, mapScale);
         TerrainDisplay display = FindObjectOfType<TerrainDisplay>();
         display.DrawNoiseMap(noiseMap);
     }
