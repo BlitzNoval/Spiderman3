@@ -61,6 +61,47 @@ public class TerrainGenerator : MonoBehaviour
                 break;
         }
     }
+
+    public void SaveTexture()
+    {
+        float[,] noiseMap = NoiseGen.GenerateNoiseMapPerlin(seed,mapX, mapY, octaves, lacunarity, persistence, mapScale, offset);
+        Texture2D tex;
+        
+        Color[] colorMap = new Color[mapX * mapY];
+        for (int y = 0; y < mapY; y++)
+        {
+            for (int x = 0; x < mapX; x++)
+            {
+                float currentHeight = noiseMap[x, y];
+                for (int i = 0; i < terrainTypes.Length; i++)
+                {
+                    if (currentHeight <= terrainTypes[i].height)
+                    {
+                        colorMap[y * mapX + x] = terrainTypes[i].color;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        switch (drawMode)
+        {
+            case Drawmode.NoiseMap:
+                tex = TerrainDisplay.TextureFromHeightMap(noiseMap);
+                break;
+            case Drawmode.ColorMap:
+                tex = TerrainDisplay.TextureFromColorMap(colorMap, mapX, mapY);
+                break;
+            case Drawmode.Geometry:
+                tex = TerrainDisplay.TextureFromColorMap(colorMap, mapX, mapY);
+                break;
+            default:
+                tex = Texture2D.blackTexture;
+                break;
+        }
+        
+        TerrainDisplay.SaveTexture(tex);
+    }
     
     [Serializable]
     public struct TerrainType

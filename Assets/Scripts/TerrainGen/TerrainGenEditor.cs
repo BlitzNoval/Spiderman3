@@ -23,5 +23,10 @@ public class TerrainGenEditor : Editor
         {
             terrainGen.GenerateMap();
         }
+
+        if (GUILayout.Button("Save Texture"))
+        {
+            terrainGen.SaveTexture();
+        }
     }
 }
