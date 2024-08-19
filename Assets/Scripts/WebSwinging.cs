@@ -1,107 +1,150 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class WebSwing : MonoBehaviour
+public class FreeSwingMovement : MonoBehaviour
 {
-    [Header("Web Settings")]
-    public Transform rightHand; // The right hand transform (assign in the Inspector)
-    public Transform leftHand; // The left hand transform (assign in the Inspector)
-    public float maxSwingDistance = 20.0f; // Maximum distance for swinging
-    public GameObject swingTargetIndicator; // Visual indicator for valid swing targets
-    public LayerMask swingableLayer; // Layer mask to define what is "swingable"
+    public LineRenderer lineRenderer;
+    public Transform handTransform;  // Reference to the hand transform
+    public float swingRadius = 30.0f;  // The radius of the swing arc (increased to 30)
+    public float duration = 2.0f;  // Total time to follow the arc
+    public float launchForce = 5.0f;  // The force to apply after swinging
+    public float upwardLaunchForce = 3.0f;  // The upward force to apply after swinging
+    public KeyCode activationKey = KeyCode.Space;  // Key to activate the swing
 
-    private LineRenderer lineRenderer; // LineRenderer to visualize the web
-    private bool useRightHand = true; // Start with the right hand
-    private bool isAiming = false; // Are we currently aiming?
-    private Transform currentSwingTarget; // The current swing target object
+    private bool isSwinging = false;  // To check if the player is currently swinging
+    private Vector3 imaginaryPoint;   // The temporary swing point
+    private Vector3[] arcPoints;
+    private float t;
+    private CharacterController characterController;
+    private Vector3 momentum;
 
-    private void Start()
+    void Start()
     {
-        // Initialize and configure the LineRenderer component
-        lineRenderer = gameObject.AddComponent<LineRenderer>();
-        lineRenderer.startWidth = 0.05f;
-        lineRenderer.endWidth = 0.05f;
-        lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        lineRenderer.startColor = Color.white;
-        lineRenderer.endColor = Color.white;
-        lineRenderer.positionCount = 2;
+        characterController = GetComponent<CharacterController>();
+    }
 
-        // Ensure the swing target indicator is initially inactive
-        if (swingTargetIndicator != null)
+    void Update()
+    {
+        // Check if the activation key is pressed and the player isn't already swinging
+        if (Input.GetKeyDown(activationKey) && !isSwinging)
         {
-            swingTargetIndicator.SetActive(false);
+            // Generate the imaginary swing point using the hand transform
+            GenerateImaginaryPoint();
+
+            // Calculate the arc and prepare for the swing
+            CalculateLowArc();
+
+            // Draw the line from hand to the imaginary point (for attachment visualization)
+            lineRenderer.positionCount = 2;
+            lineRenderer.SetPosition(0, handTransform.position);
+            lineRenderer.SetPosition(1, imaginaryPoint);
+            lineRenderer.enabled = true;
+
+            // Start the swinging process
+            StartCoroutine(SwingAlongArc());
+        }
+
+        // Update the LineRenderer to follow the hand position during the swing
+        if (isSwinging)
+        {
+            lineRenderer.SetPosition(0, handTransform.position);
+        }
+
+        // Apply momentum
+        if (!isSwinging && momentum.magnitude > 0.1f)
+        {
+            characterController.Move(momentum * Time.deltaTime);
+            momentum *= 0.98f; // Gradually reduce momentum
         }
     }
 
-    private void Update()
+    void GenerateImaginaryPoint()
     {
-        // Handle aiming and targeting
-        HandleAiming();
+        // Generate a point at a fixed distance directly in front of the hand
+        // You can customize this to generate the point based on different criteria
+        imaginaryPoint = handTransform.position + handTransform.forward * swingRadius;
+        imaginaryPoint.y += swingRadius; // Adjust the height to create an arc
+    }
 
-        // Check for the web spawn key (e.g., "E") to attach to the target
-        if (Input.GetKeyDown(KeyCode.E) && isAiming && currentSwingTarget != null)
+    void CalculateLowArc()
+    {
+        // Number of points in the arc
+        int pointCount = 50;
+        arcPoints = new Vector3[pointCount];
+
+        Vector3 start = handTransform.position;
+        Vector3 end = imaginaryPoint;
+
+        // Midpoint directly below the line between start and end
+        Vector3 midpoint = (start + end) / 2;
+        midpoint.y = Mathf.Min(start.y, end.y) - 5.0f;  // Adjust the height for the "low" arc
+
+        // Calculate the arc points
+        for (int i = 0; i < pointCount; i++)
         {
-            AttachWebToTarget();
+            float t = (float)i / (pointCount - 1);
+            arcPoints[i] = CalculateQuadraticBezierPoint(t, start, midpoint, end);
         }
     }
 
-    private void HandleAiming()
+    Vector3 CalculateQuadraticBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2)
     {
-        // Perform a sphere cast to find the nearest valid swingable object within range
-        RaycastHit hit;
-        Vector3 direction = transform.forward;
+        // Quadratic Bezier formula: B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+        return Mathf.Pow(1 - t, 2) * p0 +
+               2 * (1 - t) * t * p1 +
+               Mathf.Pow(t, 2) * p2;
+    }
 
-        if (Physics.SphereCast(transform.position, 1f, direction, out hit, maxSwingDistance, swingableLayer))
+    IEnumerator SwingAlongArc()
+    {
+        isSwinging = true;
+        float timeElapsed = 0f;
+        int pointCount = arcPoints.Length;
+
+        // Follow the arc for the specified duration
+        while (timeElapsed < duration)
         {
-            // Valid target found on the swingable layer
-            isAiming = true;
-            currentSwingTarget = hit.transform;
+            float t = timeElapsed / duration;
+            int currentPointIndex = Mathf.FloorToInt(t * (pointCount - 1));
 
-            // Visualize the swing target indicator
-            if (swingTargetIndicator != null)
+            // Move the player along the arc
+            transform.position = arcPoints[currentPointIndex];
+
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Ensure final position is exactly the endpoint
+        transform.position = imaginaryPoint;
+
+        // Calculate launch direction and apply momentum
+        Vector3 launchDirection = (imaginaryPoint - arcPoints[arcPoints.Length - 2]).normalized;
+        LaunchPlayerForward(launchDirection);
+
+        // Hide the LineRenderer after the movement is done
+        lineRenderer.enabled = false;
+        isSwinging = false;
+    }
+
+    void LaunchPlayerForward(Vector3 direction)
+    {
+        // Calculate the launch vector with an upward component
+        Vector3 launchVector = direction * launchForce + Vector3.up * upwardLaunchForce;
+        
+        // Set the initial momentum
+        momentum = launchVector;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (arcPoints != null && arcPoints.Length > 0)
+        {
+            Gizmos.color = Color.yellow;
+            for (int i = 0; i < arcPoints.Length - 1; i++)
             {
-                swingTargetIndicator.SetActive(true);
-                swingTargetIndicator.transform.position = hit.point;
+                Gizmos.DrawLine(arcPoints[i], arcPoints[i + 1]);
             }
-
-            return;
-        }
-
-        // If no valid target found, disable aiming and indicator
-        isAiming = false;
-        currentSwingTarget = null;
-        if (swingTargetIndicator != null)
-        {
-            swingTargetIndicator.SetActive(false);
-        }
-    }
-
-    private void AttachWebToTarget()
-    {
-        // Calculate the web point position based on the selected hand
-        Vector3 startPoint = useRightHand ? rightHand.position : leftHand.position;
-        Vector3 endPoint = currentSwingTarget.position;
-
-        // Set the positions for the line renderer
-        lineRenderer.SetPosition(0, startPoint);
-        lineRenderer.SetPosition(1, endPoint);
-
-        // Switch hands for the next web
-        useRightHand = !useRightHand;
-
-        // Here, you can implement the logic for the actual swinging movement, 
-        // like applying forces or constraining the player's movement to the web's direction.
-    }
-
-    private void OnDrawGizmos()
-    {
-        // Draw the web lines in the Scene view for better visualization
-        if (currentSwingTarget != null)
-        {
-            Vector3 startPoint = useRightHand ? rightHand.position : leftHand.position;
-            Vector3 endPoint = currentSwingTarget.position;
-
-            Gizmos.color = Color.white;
-            Gizmos.DrawLine(startPoint, endPoint);
         }
     }
 }
