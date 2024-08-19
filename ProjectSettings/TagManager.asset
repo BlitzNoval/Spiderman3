@@ -3,16 +3,19 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - CinemachineTarget
+  - Swingable
+  - swingable
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Swingable
   - Water
   - UI
-  - 
-  - 
+  - whatIsGround
+  - whatIsWall
   - 
   - 
   - 
