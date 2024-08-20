@@ -1,20 +1,25 @@
 using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 
 public class EnhancedSwingJumpController : MonoBehaviour
 {
     public LineRenderer lineRenderer;
-    public float swingRadius = 10.0f;
-    public float swingDuration = 2.0f;
+    public float swingSpeed = 5.0f;
     public float baseLaunchForce = 5.0f;
+    public float gravityScale = 1.0f;
     public KeyCode swingKey = KeyCode.Space;
-    public KeyCode jumpKey = KeyCode.W;
+    public List<Transform> swingPoints;
 
     private bool isSwinging = false;
-    private Vector3 imaginaryPoint;
-    private Vector3[] arcPoints;
+    private bool isLaunching = false;
+    private bool swingForward = true; // Direction flag
+    private int currentSwingIndex = 0;
+    private Transform currentSwingPoint;
     private Rigidbody rb;
+    private Vector3[] arcPoints;
+    private int currentPointIndex = 0;
+    private Vector3 previousVelocity = Vector3.zero;
 
     void Start()
     {
@@ -23,31 +28,69 @@ public class EnhancedSwingJumpController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(swingKey) && !isSwinging)
+        if (Input.GetKeyDown(swingKey) && !isSwinging && !isLaunching)
         {
-            StartSwing();
+            FindAndStartSwing();
         }
 
-        if (isSwinging && Input.GetKeyDown(jumpKey))
+        if (isSwinging && Input.GetKeyUp(swingKey))
         {
             LaunchFromSwing();
         }
     }
 
+    void FindAndStartSwing()
+    {
+        currentSwingPoint = FindNextSwingPoint();
+
+        if (currentSwingPoint != null)
+        {
+            StartSwing();
+        }
+    }
+
+    Transform FindNextSwingPoint()
+    {
+        if (swingPoints.Count == 0)
+            return null;
+
+        // Determine next swing point based on direction
+        if (swingForward)
+        {
+            if (currentSwingIndex >= swingPoints.Count)
+            {
+                swingForward = false;
+                currentSwingIndex = swingPoints.Count - 2; // Start moving backward
+            }
+        }
+        else
+        {
+            if (currentSwingIndex < 0)
+            {
+                swingForward = true;
+                currentSwingIndex = 1; // Start moving forward
+            }
+        }
+
+        Transform nextPoint = swingPoints[currentSwingIndex];
+        currentSwingIndex += swingForward ? 1 : -1;
+
+        return nextPoint;
+    }
+
     void StartSwing()
     {
-        GenerateImaginaryPoint();
         CalculateSwingArc();
+
         lineRenderer.positionCount = arcPoints.Length;
         lineRenderer.SetPositions(arcPoints);
         lineRenderer.enabled = true;
-        StartCoroutine(SwingAlongArc());
-    }
 
-    void GenerateImaginaryPoint()
-    {
-        imaginaryPoint = transform.position + transform.forward * swingRadius;
-        imaginaryPoint.y += swingRadius;
+        currentPointIndex = 0;
+        isSwinging = true;
+
+        rb.velocity += previousVelocity;
+        StartCoroutine(SwingAlongArc());
     }
 
     void CalculateSwingArc()
@@ -55,8 +98,9 @@ public class EnhancedSwingJumpController : MonoBehaviour
         int pointCount = 50;
         arcPoints = new Vector3[pointCount];
         Vector3 start = transform.position;
-        Vector3 end = imaginaryPoint;
+        Vector3 end = currentSwingPoint.position;
         Vector3 midpoint = (start + end) / 2;
+
         midpoint.y = Mathf.Min(start.y, end.y) - 5.0f;
 
         for (int i = 0; i < pointCount; i++)
@@ -75,36 +119,52 @@ public class EnhancedSwingJumpController : MonoBehaviour
 
     IEnumerator SwingAlongArc()
     {
-        isSwinging = true;
-        float timeElapsed = 0f;
-        int pointCount = arcPoints.Length;
-
-        while (timeElapsed < swingDuration)
+        while (isSwinging)
         {
-            float t = timeElapsed / swingDuration;
-            int currentPointIndex = Mathf.FloorToInt(t * (pointCount - 1));
+            if (currentPointIndex < arcPoints.Length - 1)
+            {
+                Vector3 targetPosition = arcPoints[currentPointIndex];
+                Vector3 moveDirection = (targetPosition - transform.position).normalized;
 
-            Vector3 targetPosition = arcPoints[currentPointIndex];
-            Vector3 moveDirection = (targetPosition - transform.position).normalized;
+                rb.velocity = moveDirection * swingSpeed;
 
-            // Apply force to move towards the arc point
-            rb.velocity = moveDirection * (swingRadius / swingDuration);
+                currentPointIndex = Mathf.Min(currentPointIndex + 1, arcPoints.Length - 1);
 
-            timeElapsed += Time.deltaTime;
-            yield return null;
+                rb.AddForce(Vector3.down * gravityScale, ForceMode.Acceleration);
+
+                lineRenderer.SetPosition(0, transform.position);
+                lineRenderer.SetPosition(1, currentSwingPoint.position);
+
+                yield return null;
+            }
+            else
+            {
+                isSwinging = false;
+                rb.velocity = Vector3.zero;
+            }
         }
-
-        rb.position = imaginaryPoint;
-        LaunchFromSwing();
-
-        lineRenderer.enabled = false;
-        isSwinging = false;
     }
 
     void LaunchFromSwing()
     {
-        float jumpForce = baseLaunchForce + rb.velocity.magnitude;
-        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        isSwinging = false;
+        isLaunching = true;
+        lineRenderer.enabled = false;
+
+        Vector3 launchDirection = rb.velocity.normalized;
+        float launchForce = baseLaunchForce + rb.velocity.magnitude;
+
+        rb.AddForce(launchDirection * launchForce, ForceMode.Impulse);
+
+        previousVelocity = rb.velocity;
+
+        StartCoroutine(ResetLaunchState());
+    }
+
+    IEnumerator ResetLaunchState()
+    {
+        yield return new WaitForSeconds(0.1f);
+        isLaunching = false;
     }
 
     void OnDrawGizmos()
@@ -117,13 +177,19 @@ public class EnhancedSwingJumpController : MonoBehaviour
                 Gizmos.DrawLine(arcPoints[i], arcPoints[i + 1]);
             }
             Gizmos.color = Color.red;
-            Gizmos.DrawSphere(transform.position, 0.5f); // Start point
+            Gizmos.DrawSphere(transform.position, 0.5f);
             Gizmos.color = Color.blue;
-            Gizmos.DrawSphere(imaginaryPoint, 0.5f); // End point
+            Gizmos.DrawSphere(currentSwingPoint.position, 0.5f);
             Gizmos.color = Color.green;
-            Vector3 apex = (transform.position + imaginaryPoint) / 2;
-            apex.y = Mathf.Min(transform.position.y, imaginaryPoint.y) - 5.0f;
-            Gizmos.DrawSphere(apex, 0.5f); // Apex of the arc
+            Vector3 apex = (transform.position + currentSwingPoint.position) / 2;
+            apex.y = Mathf.Min(transform.position.y, currentSwingPoint.position.y) - 5.0f;
+            Gizmos.DrawSphere(apex, 0.5f);
+        }
+
+        Gizmos.color = Color.blue;
+        foreach (Transform point in swingPoints)
+        {
+            Gizmos.DrawSphere(point.position, 0.3f);
         }
     }
 }
