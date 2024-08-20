@@ -11,6 +11,10 @@ public class EnhancedSwingJumpController : MonoBehaviour
     public KeyCode swingKey = KeyCode.Space;
     public List<Transform> swingPoints;
 
+    // New public variables for arc control
+    public float arcSize = 5.0f;  // Controls the height of the arc
+    public float arcCurveFactor = 0.5f;  // Controls how curved the arc is
+
     private bool isSwinging = false;
     private bool isLaunching = false;
     private bool swingForward = true; // Direction flag
@@ -20,6 +24,7 @@ public class EnhancedSwingJumpController : MonoBehaviour
     private Vector3[] arcPoints;
     private int currentPointIndex = 0;
     private Vector3 previousVelocity = Vector3.zero;
+    private Vector3 swingVelocity = Vector3.zero; // New variable to store swing velocity
 
     void Start()
     {
@@ -89,7 +94,8 @@ public class EnhancedSwingJumpController : MonoBehaviour
         currentPointIndex = 0;
         isSwinging = true;
 
-        rb.velocity += previousVelocity;
+        // Preserve velocity from the previous phase of swinging
+        rb.velocity = swingVelocity;
         StartCoroutine(SwingAlongArc());
     }
 
@@ -101,7 +107,10 @@ public class EnhancedSwingJumpController : MonoBehaviour
         Vector3 end = currentSwingPoint.position;
         Vector3 midpoint = (start + end) / 2;
 
-        midpoint.y = Mathf.Min(start.y, end.y) - 5.0f;
+        // Adjust the arc height and curve
+        midpoint.y = Mathf.Min(start.y, end.y) - arcSize;
+        float controlPointHeight = arcSize * arcCurveFactor;
+        midpoint.y += controlPointHeight;
 
         for (int i = 0; i < pointCount; i++)
         {
@@ -127,6 +136,7 @@ public class EnhancedSwingJumpController : MonoBehaviour
                 Vector3 moveDirection = (targetPosition - transform.position).normalized;
 
                 rb.velocity = moveDirection * swingSpeed;
+                swingVelocity = rb.velocity; // Store the swing velocity
 
                 currentPointIndex = Mathf.Min(currentPointIndex + 1, arcPoints.Length - 1);
 
@@ -140,7 +150,8 @@ public class EnhancedSwingJumpController : MonoBehaviour
             else
             {
                 isSwinging = false;
-                rb.velocity = Vector3.zero;
+                rb.velocity = swingVelocity; // Ensure velocity is maintained after swing
+                rb.velocity = Vector3.zero; // Optional: reset to zero if needed
             }
         }
     }
@@ -182,7 +193,7 @@ public class EnhancedSwingJumpController : MonoBehaviour
             Gizmos.DrawSphere(currentSwingPoint.position, 0.5f);
             Gizmos.color = Color.green;
             Vector3 apex = (transform.position + currentSwingPoint.position) / 2;
-            apex.y = Mathf.Min(transform.position.y, currentSwingPoint.position.y) - 5.0f;
+            apex.y = Mathf.Min(transform.position.y, currentSwingPoint.position.y) - arcSize;
             Gizmos.DrawSphere(apex, 0.5f);
         }
 

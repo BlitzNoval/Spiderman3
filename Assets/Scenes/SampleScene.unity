@@ -1191,6 +1191,8 @@ MonoBehaviour:
   - {fileID: 1458394442}
   - {fileID: 493427919}
   - {fileID: 1017514289}
+  arcSize: 20
+  arcCurveFactor: 0.5
 --- !u!120 &1360439602
 LineRenderer:
   serializedVersion: 2
@@ -4024,6 +4026,8 @@ MonoBehaviour:
   gravityScale: 1
   swingKey: 32
   swingPoints: []
+  arcSize: 5
+  arcCurveFactor: 0.5
 --- !u!120 &7498517609548437656
 LineRenderer:
   serializedVersion: 2
