@@ -1,30 +1,32 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 public class EnhancedSwingJumpController : MonoBehaviour
 {
     public LineRenderer lineRenderer;
+    public LineRenderer visualLineRenderer; // Visual representation LineRenderer
+    public Transform handTransform; // Reference to the player's hand
     public float swingSpeed = 5.0f;
     public float baseLaunchForce = 5.0f;
     public float gravityScale = 1.0f;
-    public KeyCode swingKey = KeyCode.Space;
-    public List<Transform> swingPoints;
-
-    // New public variables for arc control
+    public float swingPointDistance = 10.0f; // Distance to spawn swing points
     public float arcSize = 5.0f;  // Controls the height of the arc
     public float arcCurveFactor = 0.5f;  // Controls how curved the arc is
+    public float autoLaunchTime = 1.0f;  // Time before auto-launching
 
     private bool isSwinging = false;
     private bool isLaunching = false;
-    private bool swingForward = true; // Direction flag
-    private int currentSwingIndex = 0;
     private Transform currentSwingPoint;
     private Rigidbody rb;
     private Vector3[] arcPoints;
     private int currentPointIndex = 0;
-    private Vector3 previousVelocity = Vector3.zero;
-    private Vector3 swingVelocity = Vector3.zero; // New variable to store swing velocity
+    private Vector3 swingVelocity = Vector3.zero; // Variable to store swing velocity
+    private float holdTime = 0f; // Time the swing button has been held
+
+    public float rotationSpeed = 10.0f; // Speed of player rotation
+    private float currentDirection = 0.0f; // Current facing direction in degrees
+
+    private Coroutine autoLaunchCoroutine; // Reference to the auto-launch coroutine
 
     void Start()
     {
@@ -33,54 +35,75 @@ public class EnhancedSwingJumpController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(swingKey) && !isSwinging && !isLaunching)
+        HandlePlayerRotation();
+
+        if (Input.GetMouseButtonDown(1) && !isSwinging && !isLaunching) // Right Click to start swinging
         {
             FindAndStartSwing();
         }
 
-        if (isSwinging && Input.GetKeyUp(swingKey))
+        if (Input.GetMouseButton(1) && isSwinging) // Continue swinging while right click is held
+        {
+            holdTime += Time.deltaTime;
+        }
+
+        if (Input.GetMouseButtonUp(1) && isSwinging) // Left Click to launch
         {
             LaunchFromSwing();
         }
     }
 
+    void HandlePlayerRotation()
+    {
+        if (Input.GetKey(KeyCode.A))
+        {
+            // Rotate player left
+            currentDirection -= rotationSpeed * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            // Rotate player right
+            currentDirection += rotationSpeed * Time.deltaTime;
+        }
+
+        // Update player orientation based on currentDirection
+        Quaternion targetRotation = Quaternion.Euler(0, currentDirection, 0);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+    }
+
     void FindAndStartSwing()
     {
-        currentSwingPoint = FindNextSwingPoint();
+        // Clean up the previous swing point if it exists
+        if (currentSwingPoint != null)
+        {
+            Destroy(currentSwingPoint.gameObject);
+        }
+
+        currentSwingPoint = GenerateSwingPointInDirection();
 
         if (currentSwingPoint != null)
         {
+            Debug.Log("Swing point created at: " + currentSwingPoint.position);
             StartSwing();
         }
     }
 
-    Transform FindNextSwingPoint()
+    Transform GenerateSwingPointInDirection()
     {
-        if (swingPoints.Count == 0)
-            return null;
+        // The forward direction is based on the player's current facing direction
+        Vector3 direction = transform.forward;
+        Vector3 spawnPosition = transform.position + direction * swingPointDistance;
 
-        // Determine next swing point based on direction
-        if (swingForward)
-        {
-            if (currentSwingIndex >= swingPoints.Count)
-            {
-                swingForward = false;
-                currentSwingIndex = swingPoints.Count - 2; // Start moving backward
-            }
-        }
-        else
-        {
-            if (currentSwingIndex < 0)
-            {
-                swingForward = true;
-                currentSwingIndex = 1; // Start moving forward
-            }
-        }
+        // Create a new GameObject for the swing point
+        GameObject swingPointObj = new GameObject("SwingPoint");
+        swingPointObj.transform.position = spawnPosition;
 
-        Transform nextPoint = swingPoints[currentSwingIndex];
-        currentSwingIndex += swingForward ? 1 : -1;
+        // Optionally, you can add a visual indicator like a sphere
+        SphereCollider collider = swingPointObj.AddComponent<SphereCollider>();
+        collider.radius = 0.5f;
+        collider.isTrigger = true;
 
-        return nextPoint;
+        return swingPointObj.transform;
     }
 
     void StartSwing()
@@ -91,12 +114,24 @@ public class EnhancedSwingJumpController : MonoBehaviour
         lineRenderer.SetPositions(arcPoints);
         lineRenderer.enabled = true;
 
+        visualLineRenderer.positionCount = 2; // Set position count for visual line
+        visualLineRenderer.SetPosition(0, handTransform.position); // Start position at hand
+        visualLineRenderer.SetPosition(1, currentSwingPoint.position); // End position at swing point
+        visualLineRenderer.enabled = true;
+
         currentPointIndex = 0;
         isSwinging = true;
 
         // Preserve velocity from the previous phase of swinging
         rb.velocity = swingVelocity;
         StartCoroutine(SwingAlongArc());
+
+        // Start the auto-launch coroutine
+        if (autoLaunchCoroutine != null)
+        {
+            StopCoroutine(autoLaunchCoroutine);
+        }
+        autoLaunchCoroutine = StartCoroutine(AutoLaunchCoroutine());
     }
 
     void CalculateSwingArc()
@@ -116,6 +151,7 @@ public class EnhancedSwingJumpController : MonoBehaviour
         {
             float t = (float)i / (pointCount - 1);
             arcPoints[i] = CalculateQuadraticBezierPoint(t, start, midpoint, end);
+            Debug.Log("Arc Point " + i + ": " + arcPoints[i]);
         }
     }
 
@@ -130,6 +166,10 @@ public class EnhancedSwingJumpController : MonoBehaviour
     {
         while (isSwinging)
         {
+            Debug.Log("Swinging along arc");
+            // Update the point index based on hold time
+            currentPointIndex = Mathf.Clamp((int)(holdTime * (arcPoints.Length - 1) / autoLaunchTime), 0, arcPoints.Length - 1);
+
             if (currentPointIndex < arcPoints.Length - 1)
             {
                 Vector3 targetPosition = arcPoints[currentPointIndex];
@@ -138,12 +178,14 @@ public class EnhancedSwingJumpController : MonoBehaviour
                 rb.velocity = moveDirection * swingSpeed;
                 swingVelocity = rb.velocity; // Store the swing velocity
 
-                currentPointIndex = Mathf.Min(currentPointIndex + 1, arcPoints.Length - 1);
-
                 rb.AddForce(Vector3.down * gravityScale, ForceMode.Acceleration);
 
                 lineRenderer.SetPosition(0, transform.position);
                 lineRenderer.SetPosition(1, currentSwingPoint.position);
+
+                // Update the visual line renderer
+                visualLineRenderer.SetPosition(0, handTransform.position);
+                visualLineRenderer.SetPosition(1, currentSwingPoint.position);
 
                 yield return null;
             }
@@ -152,24 +194,48 @@ public class EnhancedSwingJumpController : MonoBehaviour
                 isSwinging = false;
                 rb.velocity = swingVelocity; // Ensure velocity is maintained after swing
                 rb.velocity = Vector3.zero; // Optional: reset to zero if needed
+
+                // Clean up the swing point object
+                Destroy(currentSwingPoint.gameObject);
+
+                // Hide the visual line renderer
+                visualLineRenderer.enabled = false;
             }
         }
     }
 
     void LaunchFromSwing()
     {
-        isSwinging = false;
-        isLaunching = true;
-        lineRenderer.enabled = false;
+        if (isSwinging)
+        {
+            isSwinging = false;
+            isLaunching = true;
+            lineRenderer.enabled = false;
+            visualLineRenderer.enabled = false; // Hide the visual line renderer
 
-        Vector3 launchDirection = rb.velocity.normalized;
-        float launchForce = baseLaunchForce + rb.velocity.magnitude;
+            // Determine the launch force based on swing position
+            float t = (float)currentPointIndex / (arcPoints.Length - 1); // Progress in the arc
+            Vector3 launchDirection = rb.velocity.normalized;
+            float forwardFactor = Mathf.Lerp(0.5f, 1.0f, t); // More forward force at the start
+            float upwardFactor = Mathf.Lerp(0.5f, 1.0f, 1 - t); // More upward force at the end
 
-        rb.AddForce(launchDirection * launchForce, ForceMode.Impulse);
+            float launchForce = baseLaunchForce + rb.velocity.magnitude;
+            Vector3 force = launchDirection * launchForce * forwardFactor + Vector3.up * launchForce * upwardFactor;
 
-        previousVelocity = rb.velocity;
+            rb.AddForce(force, ForceMode.Impulse);
 
-        StartCoroutine(ResetLaunchState());
+            StartCoroutine(ResetLaunchState());
+        }
+    }
+
+    IEnumerator AutoLaunchCoroutine()
+    {
+        yield return new WaitForSeconds(autoLaunchTime);
+
+        if (isSwinging)
+        {
+            LaunchFromSwing();
+        }
     }
 
     IEnumerator ResetLaunchState()
@@ -189,18 +255,15 @@ public class EnhancedSwingJumpController : MonoBehaviour
             }
             Gizmos.color = Color.red;
             Gizmos.DrawSphere(transform.position, 0.5f);
-            Gizmos.color = Color.blue;
-            Gizmos.DrawSphere(currentSwingPoint.position, 0.5f);
-            Gizmos.color = Color.green;
-            Vector3 apex = (transform.position + currentSwingPoint.position) / 2;
-            apex.y = Mathf.Min(transform.position.y, currentSwingPoint.position.y) - arcSize;
-            Gizmos.DrawSphere(apex, 0.5f);
-        }
-
-        Gizmos.color = Color.blue;
-        foreach (Transform point in swingPoints)
-        {
-            Gizmos.DrawSphere(point.position, 0.3f);
+            if (currentSwingPoint != null)
+            {
+                Gizmos.color = Color.blue;
+                Gizmos.DrawSphere(currentSwingPoint.position, 0.5f);
+                Gizmos.color = Color.green;
+                Vector3 apex = (transform.position + currentSwingPoint.position) / 2;
+                apex.y = Mathf.Min(transform.position.y, currentSwingPoint.position.y) - arcSize;
+                Gizmos.DrawSphere(apex, 0.5f);
+            }
         }
     }
 }
