@@ -257,6 +257,11 @@ PrefabInstance:
       propertyPath: m_TagString
       value: Ground
       objectReference: {fileID: 0}
+    - target: {fileID: -3464447691518478215, guid: ca06bd578c86c6a45a4226d479911554,
+        type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 882129737928793925, guid: ca06bd578c86c6a45a4226d479911554,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -960,8 +965,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981273416}
-  m_LocalRotation: {x: 0.10480233, y: 0.36493838, z: -0.041383773, w: 0.92418826}
-  m_LocalPosition: {x: -2.608183, y: -0.19999695, z: 1.0507202}
+  m_LocalRotation: {x: 0.10278655, y: 0.4070879, z: -0.046163496, w: 0.90641236}
+  m_LocalPosition: {x: -2.5117092, y: -0.19999695, z: 1.1364136}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1408,7 +1413,6 @@ GameObject:
   - component: {fileID: 1360439595}
   - component: {fileID: 1360439594}
   - component: {fileID: 1360439602}
-  - component: {fileID: 1360439603}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Player
@@ -1662,32 +1666,6 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
---- !u!143 &1360439603
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1360439593}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Height: 2
-  m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1417831244
 GameObject:
   m_ObjectHideFlags: 0
@@ -2167,8 +2145,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1716900906}
-  m_LocalRotation: {x: 0.13830425, y: 0.36319423, z: -0.054612808, w: 0.9197714}
-  m_LocalPosition: {x: -2.488184, y: -0.19999695, z: 1.0507202}
+  m_LocalRotation: {x: 0.13739325, y: 0.37818027, z: -0.056866314, w: 0.91371167}
+  m_LocalPosition: {x: -2.4587364, y: -0.19999695, z: 1.0802612}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5136,22 +5114,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13aff427dfc202f45b45186e39e5627b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 1360439598}
-  camTransform: {fileID: 5621468407019371718}
-  distance: 1
-  sensitivityX: 0
-  sensitivityY: 0
-  distancePanAmount: 0
-  currentX: 0
-  currentY: 0
-  i: 0
-  distancePan: 0
-  ii: 0
-  follow: 0
-  player: {fileID: 0}
-  playerController: {fileID: 0}
-  a: {x: 0, y: 0, z: 0}
-  b: {x: 0, y: 0, z: 0}
 --- !u!4 &8128954278847935634
 Transform:
   m_ObjectHideFlags: 0
