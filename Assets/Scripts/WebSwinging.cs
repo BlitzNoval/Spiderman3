@@ -131,6 +131,7 @@ public class WebSwinging : MonoBehaviour
         {
             swingVelocity = rb.velocity;
             StartSwing();
+            
         }
     }
 
@@ -151,6 +152,10 @@ public class WebSwinging : MonoBehaviour
 
     void StartSwing()
     {
+        //perform swing animation
+        int pickSwing = UnityEngine.Random.Range(1, 3);
+        animator.SetInteger("Swing", pickSwing);
+
         CalculateSwingArc();
 
         lineRenderer.positionCount = arcPoints.Length;
@@ -164,7 +169,7 @@ public class WebSwinging : MonoBehaviour
 
         currentPointIndex = 0;
         isSwinging = true;
-
+        
         rb.velocity = swingVelocity;
 
         StartCoroutine(SwingAlongArc());
@@ -246,6 +251,9 @@ public class WebSwinging : MonoBehaviour
     {
         if (isSwinging)
         {
+            //revert swinging anim
+            animator.SetInteger("Swing", 4);
+            
             isSwinging = false;
             isLaunching = true;
             lineRenderer.enabled = false;
@@ -298,6 +306,7 @@ public class WebSwinging : MonoBehaviour
             else
             {
                 currentState = PlayerStateAnim.SwingingUpArc;
+                animator.SetInteger("Swing", 3);
             }
         }
         else if (isLaunching)
@@ -319,6 +328,9 @@ public class WebSwinging : MonoBehaviour
             }
             else
             {
+                //landing animation
+                animator.SetTrigger("hasLanded");
+
                 currentState = PlayerStateAnim.Idle;
             }
         }
@@ -332,25 +344,31 @@ public class WebSwinging : MonoBehaviour
 
     void UpdateAnimation()
     {
+        float currentSpeed = animator.GetFloat(Speed);
+        float targetSpeed = 0f;
+
         switch (currentState)
         {
             case PlayerStateAnim.Idle:
-                animator.SetFloat(Speed, 0f);
+                targetSpeed = 0f;
                 break;
             case PlayerStateAnim.Walking:
-                animator.SetFloat(Speed, 0.5f);
+                targetSpeed = 0.5f;
                 break;
             case PlayerStateAnim.Run:
-                animator.SetFloat(Speed, 1f);
+                targetSpeed = 1f;
                 break;
             case PlayerStateAnim.InAir:
                 animator.SetTrigger(inAir);
-                break;
+                return;  // Exit early since we don’t want to blend the speed value
             case PlayerStateAnim.Falling:
                 animator.SetTrigger(falling);
-                break;
-            // Add other cases for different states as needed
+                return;  // Exit early since we don’t want to blend the speed value
+                         // Add other cases for different states as needed
         }
+
+        float smoothSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * 5f); // Adjust the 5f value for smoother or faster transitions
+        animator.SetFloat(Speed, smoothSpeed);
 
         if (Input.GetButtonDown("Jump"))
         {
