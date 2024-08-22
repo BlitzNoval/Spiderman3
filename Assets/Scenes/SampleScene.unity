@@ -998,7 +998,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981273416}
-  m_LocalRotation: {x: 0.10278655, y: 0.40708783, z: -0.04616349, w: 0.90641236}
+  m_LocalRotation: {x: 0.10278655, y: 0.4070879, z: -0.046163496, w: 0.90641236}
   m_LocalPosition: {x: -2.5117092, y: -0.19999695, z: 1.1364136}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1172,7 +1172,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1169117627}
-  m_LocalRotation: {x: 0.1215512, y: 0.36412752, z: -0.04799746, w: 0.9221349}
+  m_LocalRotation: {x: 0.1215512, y: 0.36412755, z: -0.04799747, w: 0.9221349}
   m_LocalPosition: {x: -2.4281826, y: -0.19999695, z: 1.0507202}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1583,13 +1583,11 @@ MonoBehaviour:
   movement: {fileID: 1360439603}
   currentStatePhysics: 0
   doGroundedChecks: 1
-  moveSpeed: 1.5
-  aerialMoveSpeed: 10
   jumpHeight: 10
   lineRenderer: {fileID: 1360439602}
   visualLineRenderer: {fileID: 1417831246}
   handTransform: {fileID: 512323438}
-  swingSpeed: 10
+  swingSpeed: 50
   baseLaunchForce: 10
   gravityScale: 1
   swingPointDistance: 10
@@ -1716,9 +1714,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   swingController: {fileID: 1360439601}
   rb: {fileID: 1360439594}
-  moveSpeed: 10
+  moveSpeed: 1.5
   aerialMoveSpeed: 10
-  rotationSpeed: 10
+  rotationSpeed: 90
 --- !u!95 &1360439604
 Animator:
   serializedVersion: 5
@@ -4656,8 +4654,6 @@ MonoBehaviour:
   movement: {fileID: 0}
   currentStatePhysics: 0
   doGroundedChecks: 0
-  moveSpeed: 0
-  aerialMoveSpeed: 0
   jumpHeight: 0
   lineRenderer: {fileID: 0}
   visualLineRenderer: {fileID: 0}

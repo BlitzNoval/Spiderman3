@@ -26,8 +26,8 @@ public class WebSwinging : MonoBehaviour
     public PlayerMovement movement;
     public PlayerStatePhysics currentStatePhysics;
     public bool doGroundedChecks;
-    public float moveSpeed;
-    public float aerialMoveSpeed;
+    //public float moveSpeed;
+    //public float aerialMoveSpeed;
     public float jumpHeight;
     
     public LineRenderer lineRenderer;
@@ -50,7 +50,6 @@ public class WebSwinging : MonoBehaviour
     private Vector3 swingVelocity = Vector3.zero; // Variable to store swing velocity
 
     public float rotationSpeed = 10.0f; // Speed of player rotation
-    private float currentDirection = 0.0f; // Current facing direction in degrees
 
     private Coroutine autoLaunchCoroutine; // Reference to the auto-launch coroutine
 
@@ -58,9 +57,9 @@ public class WebSwinging : MonoBehaviour
 
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         movement = GetComponent<PlayerMovement>();
         movement.rb = rb;
-        rb = GetComponent<Rigidbody>();
     }
 
     void Update()
@@ -68,7 +67,7 @@ public class WebSwinging : MonoBehaviour
         switch (currentStatePhysics)
         {
             case PlayerStatePhysics.Aerial:
-                movement.HandlePlayerRotation(currentDirection);
+                movement.HandlePlayerRotation();
                 movement.DoAerialMovement();
                 break;
             case PlayerStatePhysics.Grounded:
@@ -171,20 +170,23 @@ public class WebSwinging : MonoBehaviour
 
         StartCoroutine(SwingAlongArc());
 
+        /*
         // Start the auto-launch coroutine
         if (autoLaunchCoroutine != null)
         {
             StopCoroutine(autoLaunchCoroutine);
         }
         autoLaunchCoroutine = StartCoroutine(AutoLaunchCoroutine());
+        */
     }
 
     void CalculateSwingArc()
     {
         int pointCount = 50;
         arcPoints = new Vector3[pointCount];
+        Vector3 swingPointDir = (currentSwingPoint.position - transform.position).normalized;
         Vector3 start = transform.position;
-        Vector3 end = currentSwingPoint.position;
+        Vector3 end = transform.position + swingPointDir * (Vector3.Distance(transform.position,currentSwingPoint.position) * 2);
         Vector3 midpoint = (start + end) / 2;
 
         // Adjust the arc height and curve based on velocity
@@ -210,19 +212,25 @@ public class WebSwinging : MonoBehaviour
 
     IEnumerator SwingAlongArc()
     {
+        swingSpeed = rb.velocity.magnitude;
         while (isSwinging)
         {
+            yield return new WaitForEndOfFrame();
             if (currentPointIndex < arcPoints.Length - 1)
             {
+                float tolerance = 0.3f;
                 Vector3 targetPosition = arcPoints[currentPointIndex];
                 Vector3 moveDirection = (targetPosition - transform.position).normalized;
 
                 rb.velocity = moveDirection * swingSpeed;
                 swingVelocity = rb.velocity; // Store the swing velocity
 
-                currentPointIndex = Mathf.Min(currentPointIndex + 1, arcPoints.Length - 1);
+                if (Vector3.Distance(transform.position, arcPoints[currentPointIndex]) < tolerance)
+                {
+                    currentPointIndex = Mathf.Min(currentPointIndex + 1, arcPoints.Length - 1);
+                }
 
-                rb.AddForce(Vector3.down * gravityScale, ForceMode.Acceleration);
+                //rb.AddForce(Vector3.down * gravityScale, ForceMode.Acceleration);
 
                 lineRenderer.SetPosition(0, transform.position);
                 lineRenderer.SetPosition(1, currentSwingPoint.position);
@@ -231,13 +239,18 @@ public class WebSwinging : MonoBehaviour
                 visualLineRenderer.SetPosition(0, handTransform.position);
                 visualLineRenderer.SetPosition(1, currentSwingPoint.position);
 
-                yield return null;
+                //yield return null;
+                //Tolerance calculation to auto-launch the player at the end of the arc
+                if (Vector3.Distance(transform.position, arcPoints[arcPoints.Length - 1]) < tolerance)
+                {
+                    LaunchFromSwing();
+                }
             }
             else
             {
                 isSwinging = false;
                 rb.velocity = swingVelocity; // Ensure velocity is maintained after swing
-                rb.velocity = Vector3.zero; // Optional: reset to zero if needed
+                //rb.velocity = Vector3.zero; // Optional: reset to zero if needed
 
                 // Clean up the swing point object
                 Destroy(currentSwingPoint.gameObject);
