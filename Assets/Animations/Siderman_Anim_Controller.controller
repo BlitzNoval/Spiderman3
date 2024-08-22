@@ -269,7 +269,7 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: Speed
     m_Mirror: 0
-  m_BlendParameter: Forward Swing
+  m_BlendParameter: inSwing
   m_BlendParameterY: Speed
   m_MinThreshold: 0
   m_MaxThreshold: 1
@@ -359,7 +359,7 @@ BlendTree:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Emote Tree
+  m_Name: Emote Swing Tree
   m_Childs:
   - serializedVersion: 2
     m_Motion: {fileID: -5106273274313285727, guid: 3508fdc0a2af58b47a9d5f1a8e7c18f4,
@@ -518,19 +518,13 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 0}
-  - m_Name: Forward Swing
-    m_Type: 1
+  - m_Name: Swing
+    m_Type: 3
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 0}
-  - m_Name: Left Swing
-    m_Type: 1
-    m_DefaultFloat: 0
-    m_DefaultInt: 0
-    m_DefaultBool: 0
-    m_Controller: {fileID: 0}
-  - m_Name: Right Swing
+  - m_Name: inSwing
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -542,8 +536,8 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 0}
-  - m_Name: Swing
-    m_Type: 3
+  - m_Name: Jump
+    m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
@@ -555,12 +549,6 @@ AnimatorController:
     m_DefaultBool: 0
     m_Controller: {fileID: 0}
   - m_Name: hasLanded
-    m_Type: 9
-    m_DefaultFloat: 0
-    m_DefaultInt: 0
-    m_DefaultBool: 0
-    m_Controller: {fileID: 0}
-  - m_Name: Jump
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -831,7 +819,7 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: Speed
     m_Mirror: 0
-  m_BlendParameter: Left Swing
+  m_BlendParameter: inSwing
   m_BlendParameterY: Speed
   m_MinThreshold: 0
   m_MaxThreshold: 1
@@ -898,7 +886,7 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: Speed
     m_Mirror: 0
-  m_BlendParameter: Right Swing
+  m_BlendParameter: inSwing
   m_BlendParameterY: Speed
   m_MinThreshold: 0
   m_MaxThreshold: 1
