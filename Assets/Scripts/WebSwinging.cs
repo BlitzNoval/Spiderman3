@@ -1,8 +1,25 @@
+using System;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Serialization;
 
 public class EnhancedSwingJumpController : MonoBehaviour
 {
+    [Serializable]
+    public enum PlayerStatePhysics
+    {
+        Grounded,
+        Aerial,
+        Swinging,
+        Launching
+    }
+
+    public PlayerStatePhysics currentStatePhysics;
+    public bool doGroundedChecks;
+    public float moveSpeed;
+    public float aerialMoveSpeed;
+    public float jumpHeight;
+    
     public LineRenderer lineRenderer;
     public LineRenderer visualLineRenderer; // Visual representation LineRenderer
     public Transform handTransform; // Reference to the player's hand
@@ -35,7 +52,20 @@ public class EnhancedSwingJumpController : MonoBehaviour
 
     void Update()
     {
-        HandlePlayerRotation();
+        switch (currentStatePhysics)
+        {
+            case PlayerStatePhysics.Aerial:
+                HandlePlayerRotation();
+                DoAerialMovement();
+                break;
+            case PlayerStatePhysics.Grounded:
+                if (Input.GetButtonDown("Jump"))
+                {
+                    rb.AddForce(transform.up*jumpHeight, ForceMode.VelocityChange);
+                }
+                DoGroundedMovement();
+                break;
+        }
 
         if (Input.GetMouseButtonDown(1) && !isSwinging && !isLaunching) // Right Click to start swinging
         {
@@ -51,6 +81,53 @@ public class EnhancedSwingJumpController : MonoBehaviour
         {
             LaunchFromSwing();
         }
+    }
+
+    private void FixedUpdate()
+    {
+        switch (currentStatePhysics)
+        {
+           case PlayerStatePhysics.Aerial:
+               rb.velocity = new Vector3(rb.velocity.x * 0.99f, rb.velocity.y, rb.velocity.z * 0.99f);
+               break;
+           case PlayerStatePhysics.Grounded:
+               rb.velocity = new Vector3(rb.velocity.x * 0.9f, rb.velocity.y, rb.velocity.z * 0.9f);
+               break;
+        }
+        if (doGroundedChecks)
+        {
+            float groundCheckDistance = 0.5f;
+            //Very basic grounded checks
+            int groundLayer = 1 << LayerMask.NameToLayer("whatIsGround");
+            groundLayer |= 1 << LayerMask.NameToLayer("whatIsWall");
+            if (Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer))
+            {
+                currentStatePhysics = PlayerStatePhysics.Grounded;
+            }
+            else
+            {
+                currentStatePhysics = PlayerStatePhysics.Aerial;
+            }
+        }
+    }
+
+    private void DoAerialMovement()
+    {
+        float verticalInput = Input.GetAxis("Vertical");
+        if (verticalInput != 0)
+        {
+            rb.AddForce(transform.forward*verticalInput*aerialMoveSpeed, ForceMode.Acceleration);
+        }
+    }
+
+    private void DoGroundedMovement()
+    {
+        float moveX = Input.GetAxis("Horizontal");
+        float moveZ = Input.GetAxis("Vertical");
+        Vector3 move = transform.right * moveX + transform.forward * moveZ;
+        rb.AddForce(move*moveSpeed, ForceMode.VelocityChange);
+        Quaternion targetRotation = Quaternion.Euler(0, move.x>0?currentDirection += rotationSpeed * Time.deltaTime:currentDirection -= rotationSpeed * Time.deltaTime, 0);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 
     void HandlePlayerRotation()
@@ -74,14 +151,14 @@ public class EnhancedSwingJumpController : MonoBehaviour
     void FindAndStartSwing()
     {
         // Clean up the previous swing point if it exists
-        if (currentSwingPoint != null)
+        if (currentSwingPoint)
         {
             Destroy(currentSwingPoint.gameObject);
         }
 
         currentSwingPoint = GenerateSwingPointInDirection();
 
-        if (currentSwingPoint != null)
+        if (currentSwingPoint)
         {
             Debug.Log("Swing point created at: " + currentSwingPoint.position);
             StartSwing();
@@ -92,7 +169,7 @@ public class EnhancedSwingJumpController : MonoBehaviour
     {
         // The forward direction is based on the player's current facing direction
         Vector3 direction = transform.forward;
-        Vector3 spawnPosition = transform.position + direction * swingPointDistance;
+        Vector3 spawnPosition = transform.position + direction * swingPointDistance + transform.right*2f;
 
         // Create a new GameObject for the swing point
         GameObject swingPointObj = new GameObject("SwingPoint");

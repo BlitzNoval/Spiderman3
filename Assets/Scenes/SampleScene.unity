@@ -535,6 +535,11 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 09f432854f4f69f4cb585cc8ae66d6d2, type: 2}
     - target: {fileID: -7029948723529949830, guid: cb257f28b56ca484abebc0aca4e2dd74,
         type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: -7029948723529949830, guid: cb257f28b56ca484abebc0aca4e2dd74,
+        type: 3}
       propertyPath: m_StaticEditorFlags
       value: 1
       objectReference: {fileID: 0}
@@ -547,6 +552,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: City_Realized_Instances_Seperated_Ground_002 (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5148817236446094103, guid: cb257f28b56ca484abebc0aca4e2dd74,
+        type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -946,7 +956,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981273416}
-  m_LocalRotation: {x: 0.10278655, y: 0.4070879, z: -0.046163496, w: 0.90641236}
+  m_LocalRotation: {x: 0.10278655, y: 0.40708783, z: -0.04616349, w: 0.90641236}
   m_LocalPosition: {x: -2.5117092, y: -0.19999695, z: 1.1364136}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1532,6 +1542,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d05c0ba448d25644b57c03a9fc4b4ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentState: 0
+  doGroundedChecks: 1
+  moveSpeed: 1.5
+  aerialMoveSpeed: 10
+  jumpHeight: 10
   lineRenderer: {fileID: 1360439602}
   visualLineRenderer: {fileID: 1417831246}
   handTransform: {fileID: 1301155334}
@@ -3958,7 +3973,7 @@ MonoBehaviour:
     OrthographicSize: 10
     NearClipPlane: 0.1
     FarClipPlane: 5000
-    Dutch: 5
+    Dutch: 0
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
@@ -3979,7 +3994,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2298854444477919509}
-  m_LocalRotation: {x: 0, y: 0, z: 0.04361939, w: 0.99904823}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 31.439999, y: 84.46, z: -629.99}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4547,6 +4562,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d05c0ba448d25644b57c03a9fc4b4ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentState: 0
+  doGroundedChecks: 0
+  moveSpeed: 0
+  aerialMoveSpeed: 0
+  jumpHeight: 0
   lineRenderer: {fileID: 0}
   visualLineRenderer: {fileID: 0}
   handTransform: {fileID: 0}
