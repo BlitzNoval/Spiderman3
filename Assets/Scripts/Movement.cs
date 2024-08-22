@@ -1,45 +1,55 @@
+using System;
 using UnityEngine;
-
-[RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    public float speed = 5f;
-    public float jumpHeight = 2f;
-    public float gravity = -9.81f;
-    public float groundCheckDistance = 0.4f;
-    public Transform groundCheck;
-    public LayerMask groundMask;
+    public EnhancedSwingJumpController swingController;
+    public Rigidbody rb;
+    public float moveSpeed;
+    public float aerialMoveSpeed;
+    public float rotationSpeed;
 
-    private CharacterController characterController;
-    private Vector3 velocity;
-    private bool isGrounded;
-
-    void Start()
+    private void Start()
     {
-        characterController = GetComponent<CharacterController>();
+        swingController = GetComponent<EnhancedSwingJumpController>();
     }
 
-    void Update()
+    public void DoAerialMovement()
     {
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckDistance, groundMask);
-
-        if (isGrounded && velocity.y < 0)
+        float verticalInput = Input.GetAxis("Vertical");
+        if (verticalInput != 0)
         {
-            velocity.y = -2f;
+            rb.AddForce(transform.forward*verticalInput*aerialMoveSpeed, ForceMode.Acceleration);
         }
+    }
 
+    public void DoGroundedMovement()
+    {
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
-
-        characterController.Move(move * speed * Time.deltaTime);
-
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        /*rb.AddForce(move*moveSpeed, ForceMode.VelocityChange);
+        if (move.x != 0)
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            Quaternion targetRotation = Quaternion.Euler(0, move.x>0?currentDirection += rotationSpeed * Time.deltaTime:currentDirection -= rotationSpeed * Time.deltaTime, 0);
+            transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+        }*/
+    }
+
+    public void HandlePlayerRotation(float currentDirection)
+    {
+        if (Input.GetKey(KeyCode.A))
+        {
+            // Rotate player left
+            currentDirection -= rotationSpeed * Time.deltaTime;
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            // Rotate player right
+            currentDirection += rotationSpeed * Time.deltaTime;
         }
 
-        velocity.y += gravity * Time.deltaTime;
-        characterController.Move(velocity * Time.deltaTime);
+        // Update player orientation based on currentDirection
+        Quaternion targetRotation = Quaternion.Euler(0, currentDirection, 0);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 }

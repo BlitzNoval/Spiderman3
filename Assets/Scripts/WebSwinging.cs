@@ -23,6 +23,7 @@ public class EnhancedSwingJumpController : MonoBehaviour
         Launching
     }
 
+    public PlayerMovement movement;
     public PlayerStatePhysics currentStatePhysics;
     public bool doGroundedChecks;
     public float moveSpeed;
@@ -57,6 +58,8 @@ public class EnhancedSwingJumpController : MonoBehaviour
 
     void Start()
     {
+        movement = GetComponent<PlayerMovement>();
+        movement.rb = rb;
         rb = GetComponent<Rigidbody>();
     }
 
@@ -65,18 +68,18 @@ public class EnhancedSwingJumpController : MonoBehaviour
         switch (currentStatePhysics)
         {
             case PlayerStatePhysics.Aerial:
-                HandlePlayerRotation();
-                DoAerialMovement();
+                movement.HandlePlayerRotation(currentDirection);
+                movement.DoAerialMovement();
                 break;
             case PlayerStatePhysics.Grounded:
                 if (Input.GetButtonDown("Jump"))
                 {
                     rb.AddForce(transform.up*jumpHeight, ForceMode.VelocityChange);
                 }
-                DoGroundedMovement();
+                movement.DoGroundedMovement();
                 break;
         }
-        HandlePlayerRotation();
+        //HandlePlayerRotation();
         UpdateState(); // Update the state based on conditions
 
         if (Input.GetMouseButtonDown(1) && !isSwinging && !isLaunching) // Right Click to start swinging
@@ -116,43 +119,6 @@ public class EnhancedSwingJumpController : MonoBehaviour
                 currentStatePhysics = PlayerStatePhysics.Aerial;
             }
         }
-    }
-
-    private void DoAerialMovement()
-    {
-        float verticalInput = Input.GetAxis("Vertical");
-        if (verticalInput != 0)
-        {
-            rb.AddForce(transform.forward*verticalInput*aerialMoveSpeed, ForceMode.Acceleration);
-        }
-    }
-
-    private void DoGroundedMovement()
-    {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-        Vector3 move = transform.right * moveX + transform.forward * moveZ;
-        rb.AddForce(move*moveSpeed, ForceMode.VelocityChange);
-        Quaternion targetRotation = Quaternion.Euler(0, move.x>0?currentDirection += rotationSpeed * Time.deltaTime:currentDirection -= rotationSpeed * Time.deltaTime, 0);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-    }
-
-    void HandlePlayerRotation()
-    {
-        if (Input.GetKey(KeyCode.A))
-        {
-            // Rotate player left
-            currentDirection -= rotationSpeed * Time.deltaTime;
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            // Rotate player right
-            currentDirection += rotationSpeed * Time.deltaTime;
-        }
-
-        // Update player orientation based on currentDirection
-        Quaternion targetRotation = Quaternion.Euler(0, currentDirection, 0);
-        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
     }
 
     void FindAndStartSwing()
