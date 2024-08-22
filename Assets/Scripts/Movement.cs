@@ -7,7 +7,6 @@ public class PlayerMovement : MonoBehaviour
     public float moveSpeed;
     public float aerialMoveSpeed;
     public float rotationSpeed;
-    private float currentDirection = 0.0f; // Current facing direction in degrees
 
     private void Start()
     {
@@ -28,8 +27,7 @@ public class PlayerMovement : MonoBehaviour
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
-        rb.AddForce(move*moveSpeed, ForceMode.VelocityChange);
-        /*
+        /*rb.AddForce(move*moveSpeed, ForceMode.VelocityChange);
         if (move.x != 0)
         {
             Quaternion targetRotation = Quaternion.Euler(0, move.x>0?currentDirection += rotationSpeed * Time.deltaTime:currentDirection -= rotationSpeed * Time.deltaTime, 0);
@@ -37,7 +35,7 @@ public class PlayerMovement : MonoBehaviour
         }*/
     }
 
-    public void HandlePlayerRotation()
+    public void HandlePlayerRotation(float currentDirection)
     {
         if (Input.GetKey(KeyCode.A))
         {
@@ -50,7 +48,6 @@ public class PlayerMovement : MonoBehaviour
             currentDirection += rotationSpeed * Time.deltaTime;
         }
 
-        //transform.Rotate(0, transform.rotation.y +currentDirection * Time.deltaTime * rotationSpeed, 0);
         // Update player orientation based on currentDirection
         Quaternion targetRotation = Quaternion.Euler(0, currentDirection, 0);
         transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
