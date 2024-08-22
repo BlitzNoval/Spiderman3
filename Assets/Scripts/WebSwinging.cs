@@ -56,9 +56,6 @@ public class WebSwinging : MonoBehaviour
 
     public PlayerStateAnim currentState; // Track the player's current state
 
-    //Animation variables
-    public Animator anim;
-
     void Start()
     {
         movement = GetComponent<PlayerMovement>();
@@ -77,9 +74,6 @@ public class WebSwinging : MonoBehaviour
             case PlayerStatePhysics.Grounded:
                 if (Input.GetButtonDown("Jump"))
                 {
-                    //perform jump animation
-                    anim.SetTrigger("Jump");
-
                     rb.AddForce(transform.up*jumpHeight, ForceMode.VelocityChange);
                 }
                 movement.DoGroundedMovement();
@@ -159,11 +153,6 @@ public class WebSwinging : MonoBehaviour
     void StartSwing()
     {
         CalculateSwingArc();
-
-        int randomNumber = UnityEngine.Random.Range(0, 3); // Generates either 0, 1, or 2
-        float swingNumber = (float)randomNumber; // Converts the int to a float
-                                                 // Perform swing animation
-        anim.SetFloat("Swing", swingNumber);
 
         lineRenderer.positionCount = arcPoints.Length;
         lineRenderer.SetPositions(arcPoints);
@@ -268,9 +257,6 @@ public class WebSwinging : MonoBehaviour
             lineRenderer.enabled = false;
             visualLineRenderer.enabled = false; // Hide the visual line renderer
 
-            //perform end swing animation
-            anim.SetFloat("inSwing", 1f);
-
             // Determine the launch force based on swing position and velocity
             float t = (float)currentPointIndex / (arcPoints.Length - 1); // Progress in the arc
             Vector3 launchDirection = rb.velocity.normalized;
@@ -318,9 +304,6 @@ public class WebSwinging : MonoBehaviour
             else
             {
                 currentState = PlayerStateAnim.SwingingUpArc;
-                
-                //perform swing up animation
-                anim.SetFloat("inSwing", 0.5f);
             }
         }
         else if (isLaunching)
@@ -328,26 +311,15 @@ public class WebSwinging : MonoBehaviour
             if (rb.velocity.y > 0)
             {
                 currentState = PlayerStateAnim.InAir;
-
-                //switch to jump pose animation
-                anim.SetTrigger("inAir");
             }
             else if (rb.velocity.y < 0)
             {
                 currentState = PlayerStateAnim.Falling;
-
-                //switch to falling pose animation
-                anim.SetTrigger("Falling");
-
-
             }
         }
         else if (IsGrounded())
         {
             currentState = PlayerStateAnim.Grounded;
-
-            //perform landing animation
-            anim.SetTrigger("hasLanded");
         }
     }
 
