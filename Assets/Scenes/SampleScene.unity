@@ -998,7 +998,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981273416}
-  m_LocalRotation: {x: 0.10278655, y: 0.40708783, z: -0.04616349, w: 0.90641236}
+  m_LocalRotation: {x: 0.10278655, y: 0.40708786, z: -0.046163484, w: 0.90641236}
   m_LocalPosition: {x: -2.5117092, y: -0.19999695, z: 1.1364136}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1582,7 +1582,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movement: {fileID: 1360439603}
   currentStatePhysics: 0
-  doGroundedChecks: 1
+  doGroundedChecks: 0
   jumpHeight: 9
   lineRenderer: {fileID: 1360439602}
   visualLineRenderer: {fileID: 1417831246}
@@ -1594,7 +1594,6 @@ MonoBehaviour:
   arcSize: 20
   arcCurveFactor: -1
   autoLaunchTime: 4
-  rotationSpeed: 90
   currentState: 0
 --- !u!120 &1360439602
 LineRenderer:
@@ -1717,6 +1716,7 @@ MonoBehaviour:
   moveSpeed: 1.5
   aerialMoveSpeed: 10
   rotationSpeed: 90
+  isMoving: 0
 --- !u!95 &1360439604
 Animator:
   serializedVersion: 5
@@ -4665,7 +4665,6 @@ MonoBehaviour:
   arcSize: 5
   arcCurveFactor: 0.5
   autoLaunchTime: 1
-  rotationSpeed: 10
   currentState: 0
 --- !u!120 &7498517609548437656
 LineRenderer:

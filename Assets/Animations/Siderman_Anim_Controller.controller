@@ -60,7 +60,7 @@ AnimatorStateMachine:
     m_Position: {x: 650, y: 170, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -7245205210293445133}
-    m_Position: {x: 770, y: 0, z: 0}
+    m_Position: {x: 760, y: -60, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -760,7 +760,7 @@ AnimatorStateTransition:
   m_Conditions:
   - m_ConditionMode: 1
     m_ConditionEvent: inAir
-    m_EventTreshold: 1
+    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -7245205210293445133}
   m_Solo: 0
