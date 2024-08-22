@@ -7,12 +7,12 @@ public enum PlayerStateAnim
 {
     SwingingDownArc,
     SwingingUpArc,
-    Flying,
+    InAir,
     Falling,
     Grounded
 }
 
-public class EnhancedSwingJumpController : MonoBehaviour
+public class WebSwinging : MonoBehaviour
 {
     [Serializable]
     public enum PlayerStatePhysics
@@ -310,7 +310,7 @@ public class EnhancedSwingJumpController : MonoBehaviour
         {
             if (rb.velocity.y > 0)
             {
-                currentState = PlayerStateAnim.Flying;
+                currentState = PlayerStateAnim.InAir;
             }
             else if (rb.velocity.y < 0)
             {

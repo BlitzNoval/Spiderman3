@@ -536,7 +536,7 @@ PrefabInstance:
     - target: {fileID: -7029948723529949830, guid: cb257f28b56ca484abebc0aca4e2dd74,
         type: 3}
       propertyPath: m_Layer
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: -7029948723529949830, guid: cb257f28b56ca484abebc0aca4e2dd74,
         type: 3}
@@ -552,6 +552,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: City_Realized_Instances_Seperated_Ground_002 (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: cb257f28b56ca484abebc0aca4e2dd74,
+        type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5148817236446094103, guid: cb257f28b56ca484abebc0aca4e2dd74,
         type: 3}
@@ -993,7 +998,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981273416}
-  m_LocalRotation: {x: 0.10278655, y: 0.4070879, z: -0.046163496, w: 0.90641236}
+  m_LocalRotation: {x: 0.10278655, y: 0.40708783, z: -0.04616349, w: 0.90641236}
   m_LocalPosition: {x: -2.5117092, y: -0.19999695, z: 1.1364136}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1575,7 +1580,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d05c0ba448d25644b57c03a9fc4b4ae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  movement: {fileID: 0}
+  movement: {fileID: 1360439603}
   currentStatePhysics: 0
   doGroundedChecks: 1
   moveSpeed: 1.5
@@ -1709,11 +1714,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da427e45d9e00644e81bfc0b56e7edb4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  swingController: {fileID: 0}
-  rb: {fileID: 0}
-  moveSpeed: 0
-  aerialMoveSpeed: 0
-  rotationSpeed: 0
+  swingController: {fileID: 1360439601}
+  rb: {fileID: 1360439594}
+  moveSpeed: 10
+  aerialMoveSpeed: 10
+  rotationSpeed: 10
 --- !u!95 &1360439604
 Animator:
   serializedVersion: 5

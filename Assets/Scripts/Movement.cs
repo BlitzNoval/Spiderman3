@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
-    public EnhancedSwingJumpController swingController;
+    public WebSwinging swingController;
     public Rigidbody rb;
     public float moveSpeed;
     public float aerialMoveSpeed;
@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Start()
     {
-        swingController = GetComponent<EnhancedSwingJumpController>();
+        swingController = GetComponent<WebSwinging>();
     }
 
     public void DoAerialMovement()
