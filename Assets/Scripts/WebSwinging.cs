@@ -160,7 +160,7 @@ public class WebSwinging : MonoBehaviour
     {
         CalculateSwingArc();
 
-        int randomNumber = Random.Range(0, 3); // Generates either 0, 1, or 2
+        int randomNumber = UnityEngine.Random.Range(0, 3); // Generates either 0, 1, or 2
         float swingNumber = (float)randomNumber; // Converts the int to a float
                                                  // Perform swing animation
         anim.SetFloat("Swing", swingNumber);
