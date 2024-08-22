@@ -360,14 +360,14 @@ public class WebSwinging : MonoBehaviour
                 break;
             case PlayerStateAnim.InAir:
                 animator.SetTrigger(inAir);
-                return;  // Exit early since we don’t want to blend the speed value
+                return;  // Exit early since we donï¿½t want to blend the speed value
             case PlayerStateAnim.Falling:
                 animator.SetTrigger(falling);
-                return;  // Exit early since we don’t want to blend the speed value
+                return;  // Exit early since we donï¿½t want to blend the speed value
                          // Add other cases for different states as needed
         }
 
-        float smoothSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * 5f); // Adjust the 5f value for smoother or faster transitions
+        float smoothSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * 1f); // Adjust the 5f value for smoother or faster transitions
         animator.SetFloat(Speed, smoothSpeed);
 
         if (Input.GetButtonDown("Jump"))
