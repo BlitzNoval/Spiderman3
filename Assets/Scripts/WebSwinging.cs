@@ -125,7 +125,7 @@ public class WebSwinging : MonoBehaviour
         }
         
         //Clamping max speed
-        rb.velocity = ClampVelocity(rb.velocity, 50f);
+        rb.velocity = ClampVelocity(rb.velocity, 10f);
     }
     
     Vector3 ClampVelocity(Vector3 velocity, float maxSpeed)
