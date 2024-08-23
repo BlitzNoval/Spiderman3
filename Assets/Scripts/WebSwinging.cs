@@ -29,6 +29,8 @@ public class WebSwinging : MonoBehaviour
     public PlayerStatePhysics currentStatePhysics;
     public bool doGroundedChecks;
     public float jumpHeight;
+    public float maxSwingSpeed;
+    
     public LineRenderer lineRenderer;
     public LineRenderer visualLineRenderer;
     public Transform handTransform;
@@ -109,7 +111,7 @@ public class WebSwinging : MonoBehaviour
         }
         if (doGroundedChecks)
         {
-            float groundCheckDistance = 0.5f;
+            float groundCheckDistance = 0.3f;
             int groundLayer = 1 << LayerMask.NameToLayer("whatIsGround");
             groundLayer |= 1 << LayerMask.NameToLayer("whatIsWall");
             if (Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer))
@@ -121,6 +123,21 @@ public class WebSwinging : MonoBehaviour
                 currentStatePhysics = PlayerStatePhysics.Aerial;
             }
         }
+        
+        //Clamping max speed
+        rb.velocity = ClampVelocity(rb.velocity, 50f);
+    }
+    
+    Vector3 ClampVelocity(Vector3 velocity, float maxSpeed)
+    {
+        // If the velocity exceeds the maxSpeed, clamp it
+        if (velocity.magnitude > maxSpeed)
+        {
+            return velocity.normalized * maxSpeed;
+        }
+
+        // If the velocity is within the maxSpeed, return it unchanged
+        return velocity;
     }
 
     void FindAndStartSwing()
@@ -131,14 +148,38 @@ public class WebSwinging : MonoBehaviour
         {
             swingVelocity = rb.velocity;
             StartSwing();
-            
         }
     }
 
     Transform GenerateSwingPointInDirection()
     {
         Vector3 direction = transform.forward;
-        Vector3 spawnPosition = transform.position + direction * swingPointDistance + transform.right * 2f;
+        Vector3 spawnPosition = transform.position + direction * swingPointDistance;
+        
+        //Do a raycast sweep in a cone around the area
+        int wallLayer = 1 << LayerMask.NameToLayer("whatIsGround");
+        int sweepGranularityX = 5;
+        int sweepGranularityY = 4;
+        float furthestDistance = Single.MinValue;
+        for (int i = 0; i < sweepGranularityY; i++)
+        {
+            for (int j = 0; j < sweepGranularityX; j++)
+            {
+                Vector3 xzInfluence = Vector3.Lerp(transform.forward, transform.right, j/(float)(sweepGranularityX*2)).normalized;
+                Vector3 yInfluence = transform.up * Mathf.Lerp(0.5f, 2, i / (float)sweepGranularityY - 1);
+                Vector3 rayDir = (xzInfluence + yInfluence).normalized;
+                RaycastHit hit;
+                if (Physics.SphereCast(transform.position, 1f, rayDir, out hit, swingPointDistance*2, wallLayer))
+                {
+                    float dist = Vector3.Distance(transform.position, hit.point);
+                    if (dist > furthestDistance)
+                    {
+                        spawnPosition = hit.point;
+                        furthestDistance = dist;
+                    }
+                }
+            }
+        }
 
         GameObject swingPointObj = new GameObject("SwingPoint");
         swingPointObj.transform.position = spawnPosition;
@@ -182,19 +223,39 @@ public class WebSwinging : MonoBehaviour
         Vector3 swingPointDir = (currentSwingPoint.position - transform.position).normalized;
         Vector3 start = transform.position;
         Vector3 end = transform.position + swingPointDir * (Vector3.Distance(transform.position, currentSwingPoint.position) * 2);
-        Vector3 midpoint = (start + end) / 2;
+        Vector3 midpoint = CalculateBezierControlPoint(start, end, rb.velocity);
 
-        float velocityMagnitude = rb.velocity.magnitude;
+        /*float velocityMagnitude = rb.velocity.magnitude;
         float velocityFactor = Mathf.Clamp(velocityMagnitude / swingSpeed, 0.5f, 2.0f);
         midpoint.y = Mathf.Min(start.y, end.y) - arcSize * velocityFactor;
         float controlPointHeight = arcSize * arcCurveFactor * velocityFactor;
-        midpoint.y += controlPointHeight;
+        midpoint.y += controlPointHeight;*/
 
         for (int i = 0; i < pointCount; i++)
         {
             float t = (float)i / (pointCount - 1);
             arcPoints[i] = CalculateQuadraticBezierPoint(t, start, midpoint, end);
         }
+    }
+    
+    Vector3 CalculateBezierControlPoint(Vector3 startPoint, Vector3 endPoint, Vector3 playerVelocity)
+    {
+        // Find the midpoint between the start and end points
+        Vector3 midpoint = (startPoint + endPoint) / 2;
+
+        // Determine the direction from start to end
+        Vector3 lineDirection = (endPoint - startPoint).normalized;
+
+        // Project the player's velocity onto the plane perpendicular to the line direction
+        Vector3 velocityProjection = Vector3.ProjectOnPlane(playerVelocity, lineDirection).normalized;
+
+        // Determine the control point distance from the midpoint
+        float controlPointDistance = Vector3.Distance(startPoint, midpoint);
+
+        // Calculate the control point position
+        Vector3 controlPoint = midpoint + velocityProjection * controlPointDistance;
+
+        return controlPoint;
     }
 
     Vector3 CalculateQuadraticBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2)
@@ -203,32 +264,48 @@ public class WebSwinging : MonoBehaviour
                2 * (1 - t) * t * p1 +
                Mathf.Pow(t, 2) * p2;
     }
-
+    
     IEnumerator SwingAlongArc()
     {
         swingSpeed = rb.velocity.magnitude;
         while (isSwinging)
         {
-            yield return new WaitForEndOfFrame();
+            yield return null;
+
             if (currentPointIndex < arcPoints.Length - 1)
             {
-                float tolerance = 0.3f;
+                float tolerance = 1f;
                 Vector3 targetPosition = arcPoints[currentPointIndex];
                 Vector3 moveDirection = (targetPosition - transform.position).normalized;
 
-                rb.velocity = moveDirection * swingSpeed;
+                Vector3 predictedPosition = transform.position + moveDirection * (swingSpeed * Time.deltaTime);
+
+                if (Vector3.Distance(predictedPosition, targetPosition) < Vector3.Distance(transform.position, targetPosition))
+                {
+                    rb.velocity = moveDirection * swingSpeed;
+                }
+                else
+                {
+                    transform.position = targetPosition;
+                    rb.velocity = Vector3.zero;
+                }
+
                 swingVelocity = rb.velocity;
 
                 if (Vector3.Distance(transform.position, arcPoints[currentPointIndex]) < tolerance)
                 {
                     currentPointIndex = Mathf.Min(currentPointIndex + 1, arcPoints.Length - 1);
+                    swingSpeed *= 1.01f;
                 }
 
-                lineRenderer.SetPosition(0, transform.position);
-                lineRenderer.SetPosition(1, currentSwingPoint.position);
+                if (currentSwingPoint)
+                {
+                    lineRenderer.SetPosition(0, transform.position);
+                    lineRenderer.SetPosition(1, currentSwingPoint.position);
 
-                visualLineRenderer.SetPosition(0, handTransform.position);
-                visualLineRenderer.SetPosition(1, currentSwingPoint.position);
+                    visualLineRenderer.SetPosition(0, handTransform.position);
+                    visualLineRenderer.SetPosition(1, currentSwingPoint.position);
+                }
 
                 if (Vector3.Distance(transform.position, arcPoints[arcPoints.Length - 1]) < tolerance)
                 {
@@ -239,6 +316,7 @@ public class WebSwinging : MonoBehaviour
             {
                 isSwinging = false;
                 rb.velocity = swingVelocity;
+                animator.SetInteger("Swing", 4);
 
                 Destroy(currentSwingPoint.gameObject);
 
@@ -251,6 +329,9 @@ public class WebSwinging : MonoBehaviour
     {
         if (isSwinging)
         {
+            //removing the reference point
+            Destroy(currentSwingPoint.gameObject);
+            
             //revert swinging anim
             animator.SetInteger("Swing", 4);
             

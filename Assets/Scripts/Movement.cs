@@ -56,13 +56,15 @@ public class PlayerMovement : MonoBehaviour
 
     public void DoGroundedMovement()  // Make this public
     {
-        float moveX = Input.GetAxis("Horizontal");
+        float moveX = 0;
         float moveZ = Input.GetAxis("Vertical");
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
-        rb.AddForce(move * moveSpeed, ForceMode.VelocityChange);
+        //rb.AddForce(move * moveSpeed, ForceMode.VelocityChange);
 
         float adjustedSpeed = (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) ? moveSpeed * 2 : moveSpeed;
         rb.AddForce(move * adjustedSpeed, ForceMode.VelocityChange);
+        
+        HandlePlayerRotation();
 
         isMoving = move.magnitude > 0.1f;
     }
